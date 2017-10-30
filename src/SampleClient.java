@@ -21,20 +21,28 @@ public class SampleClient {
             e.printStackTrace();
         }
 
-        String s, command;
+        String s;
         Integer id;
 
+        boolean once = false;
+
         while(true) {
-            command = nextString();
-            if(command.equals("receive") || command.equals("Receive") || command.equals("r")) {
-                receive();
+            id = nextInt();
+            s = nextString();
+            send(id, s);
+            if(!once) {
+                once = true;
+                new Thread(() -> {
+                    while(true) {
+                        try {
+                            receive();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
             }
-            else {
-                id = nextInt();
-                s = nextString();
-                System.out.println(id + " " + s);
-                send(id, s);
-            }
+//            receive();
             if (false) {
                 break;
             }
@@ -53,7 +61,10 @@ public class SampleClient {
     public static void receive() throws IOException {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         socket.receive(packet);
-        System.out.println(packet);
+        byte[] kek = new byte[packet.getLength() - 1];
+        System.arraycopy(packet.getData(), 1, kek, 0, packet.getLength() - 1);
+        String s = new String(kek);
+        System.out.println(s);
     }
 
     public static void send(Integer id, String message) throws IOException {
